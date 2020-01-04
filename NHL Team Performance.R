@@ -67,7 +67,7 @@ mydata = read_csv("~/Dropbox/R/nhlPtPct.csv")
 
 # lets do some plotting
 
-group.colors = c('BOS' = 'gold', 'BUF' = 'blue4',  'DET' = 'red', 
+group.colors = c('BOS' = 'gold', 'BUF' = 'blue4',  'DET' = 'red',
                  'FLA' = 'red3', 'OTT' = 'lightsalmon4', 'TBL' = 'navy', 'TOR' = 'steelblue1',
                  'CAR' = 'firebrick2', 'CBJ' = 'blue4', 'NJD' = 'darkgreen',
                  'NYI' = 'blue3', 'NYR' = 'blue','PHI' = 'chocolate1',
@@ -77,43 +77,48 @@ group.colors = c('BOS' = 'gold', 'BUF' = 'blue4',  'DET' = 'red',
                  'ARI' = 'firebrick4', 'CGY' = 'firebrick1', 'EDM' = 'darkorange1',
                  'LAK' = 'gray0', 'SJS' = 'darkturquoise', 'VAN' = 'blue3', 'VGK' = 'gray40')
 
-ggplot(mydata %>% filter(division == 'Atlantic'), aes(season, ptpct, color = team, group = team)) +
-  geom_smooth(se = F) +
-  scale_y_continuous(limits = c(0.3, 0.8), breaks = c(0.25, 0.5, 0.75)) +
-  ylab('Point %') + xlab('Season') +
-  ggtitle('Atlantic Division') + 
-  theme_fivethirtyeight() +
-  scale_color_manual(values = group.colors)
+# plot using a line chart
+div = divs[1]
+for(div in divs){
+  ggplot(mydata %>% filter(division == div), aes(season, ptpct, color = team, group = team)) +
+    geom_line() +
+    scale_y_continuous(limits = c(0.25, 0.85), breaks = c(0.25, 0.5, 0.75)) +
+    ggtitle(paste(div, ' Division')) +
+    theme_fivethirtyeight() +
+    theme(axis.title = element_text()) + xlab('Season') + ylab('Point %') +
+    scale_color_manual(values = group.colors) -> p
+  print(p)
+}
 
-ggplot(mydata %>% filter(division == 'Metropolitan'), aes(season, ptpct, color = team, group = team)) +
+# plot using stat_smooth
+div = divs[1]
+for(div in divs){
+ if(div == 'Pacific'){
+   ggplot(mydata %>% filter(division == div, team != 'VGK'), aes(season, ptpct, color = team, group = team)) +
+   geom_smooth(method = 'loess', se = F) +
+   scale_y_continuous(limits = c(0.25, 0.85), breaks = c(0.25, 0.5, 0.75)) +
+   ggtitle(paste(div, ' Division')) +
+   theme_fivethirtyeight() +
+   theme(axis.title = element_text()) + xlab('Season') + ylab('Point %') +
+   scale_color_manual(values = group.colors) -> p
+ } else {
+   ggplot(mydata %>% filter(division == div), aes(season, ptpct, color = team, group = team)) +
+     geom_smooth(method = 'loess', se = F) +
+     scale_y_continuous(limits = c(0.25, 0.85), breaks = c(0.25, 0.5, 0.75)) +
+     ggtitle(paste(div, ' Division')) +
+     theme_fivethirtyeight() +
+     theme(axis.title = element_text()) + xlab('Season') + ylab('Point %') +
+     scale_color_manual(values = group.colors) -> p
+ }
+ print(p)
+}
+
+# plot all teams together
+ggplot(mydata %>% filter(team != 'VGK') %>% na.omit(), aes(season, ptpct, color = team, group = team)) +
   geom_smooth(method = 'loess', se = F) +
-  scale_y_continuous(limits = c(0.3, 0.8), breaks = c(0.25, 0.5, 0.75)) +
-  ylab('Point %') + xlab('Season') +
-  ggtitle('Metropolitan Division') +
-  theme_fivethirtyeight() + 
-  scale_color_manual(values = group.colors)
-
-ggplot(mydata %>% filter(division == 'Central'), aes(season, ptpct, color = team, group = team)) +
-  geom_smooth(method = 'loess', se = F) +
-  scale_y_continuous(limits = c(0.3, 0.8), breaks = c(0.25, 0.5, 0.75)) +
-  ylab('Point %') + xlab('Season') +
-  ggtitle('Central Division') +
-  theme_fivethirtyeight() + 
-  scale_color_manual(values = group.colors)
-
-ggplot(mydata %>% filter(division == 'Pacific', team != 'VGK'), aes(season, ptpct, color = team, group = team)) +
-  geom_smooth(se = F) +
-  scale_y_continuous(limits = c(0.3, 0.8), breaks = c(0.25, 0.5, 0.75)) +
-  ylab('Point %') + xlab('Season') +
-  ggtitle('Pacific Division') +
-  theme_fivethirtyeight() + 
-  scale_color_manual(values = group.colors)
-
-
-ggplot(mydata %>% filter(team != 'VGK'), aes(season, ptpct, color = team, group = team)) +
-  geom_smooth(se = F) +
-  scale_y_continuous(limits = c(0.3, 0.8), breaks = c(0.25, 0.5, 0.75)) +
-  ylab('Point %') + xlab('Season') +
+  scale_y_continuous(limits = c(0.25, 0.85), breaks = c(0.25, 0.5, 0.75)) +
   ggtitle('Entire League') +
-  theme_fivethirtyeight() + 
-  scale_color_manual(values = group.colors)
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text()) + xlab('Season') + ylab('Point %') +
+  scale_color_manual(values = group.colors) +
+  guides(row = guide_legend(nrow = 2))
